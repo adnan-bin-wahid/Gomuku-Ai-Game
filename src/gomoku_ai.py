@@ -1,36 +1,41 @@
 import numpy as np
-from typing import List, Tuple
-import time
+from typing import Tuple, List, Optional
 
 class GomokuAI:
-    def __init__(self, max_depth: int = 3, time_limit: int = 5):
+    def __init__(self, max_depth: int = 3):
         self.max_depth = max_depth
-        self.time_limit = time_limit  # seconds
-        self.start_time = 0
         self.board_size = 10
+        self.directions = [
+            (0, 1),   # horizontal
+            (1, 0),   # vertical
+            (1, 1),   # diagonal
+            (1, -1),  # anti-diagonal
+        ]
 
     def get_best_move(self, board: List[List[int]]) -> Tuple[int, int]:
-        self.start_time = time.time()
+        """Find the best move using minimax with alpha-beta pruning."""
+        board = np.array(board)
         best_score = float('-inf')
         best_move = None
-        board = np.array(board)
-        
-        # Get all valid moves (empty cells)
-        valid_moves = self.get_valid_moves(board)
-        
-        # Prioritize center moves in early game
-        if len(valid_moves) > 80:  # Board is mostly empty
-            center = self.board_size // 2
-            if (center, center) in valid_moves:
-                return (center, center)
-
         alpha = float('-inf')
         beta = float('inf')
         
+        # Get all valid moves
+        valid_moves = self.get_valid_moves(board)
+        
+        # Sort moves by their evaluation to improve alpha-beta pruning
+        moves_with_scores = []
         for move in valid_moves:
-            if time.time() - self.start_time > self.time_limit:
-                break
-                
+            board[move[0]][move[1]] = 2  # AI's move
+            score = self.evaluate_board(board)
+            board[move[0]][move[1]] = 0  # Undo move
+            moves_with_scores.append((score, move))
+        
+        # Sort moves by score in descending order
+        moves_with_scores.sort(reverse=True)
+        valid_moves = [move for _, move in moves_with_scores]
+
+        for move in valid_moves:
             board[move[0]][move[1]] = 2  # AI's move
             score = self.minimax(board, self.max_depth, False, alpha, beta)
             board[move[0]][move[1]] = 0  # Undo move
@@ -39,26 +44,25 @@ class GomokuAI:
                 best_score = score
                 best_move = move
             
-            alpha = max(alpha, score)
+            alpha = max(alpha, best_score)
+            if alpha >= beta:
+                break
         
-        return best_move if best_move else valid_moves[0]
+        return best_move if best_move is not None else valid_moves[0]
 
     def minimax(self, board: np.ndarray, depth: int, is_maximizing: bool, alpha: float, beta: float) -> float:
-        if time.time() - self.start_time > self.time_limit:
-            return self.evaluate_board(board)
-            
+        """Minimax algorithm with alpha-beta pruning."""
+        # Early stopping conditions
         if depth == 0:
             return self.evaluate_board(board)
-            
-        if self.check_winner(board, 2):  # AI wins
-            return 10000
-        if self.check_winner(board, 1):  # Human wins
-            return -10000
-            
+        
+        if self.is_winner(board, 1) or self.is_winner(board, 2):
+            return self.evaluate_board(board)
+        
         valid_moves = self.get_valid_moves(board)
         if not valid_moves:  # Draw
             return 0
-            
+        
         if is_maximizing:
             max_eval = float('-inf')
             for move in valid_moves:
@@ -82,78 +86,101 @@ class GomokuAI:
                     break
             return min_eval
 
-    def get_valid_moves(self, board: np.ndarray) -> List[Tuple[int, int]]:
-        valid_moves = []
-        # Focus on moves near existing pieces
-        padded_board = np.pad(board, 1, mode='constant')
-        for i in range(1, self.board_size + 1):
-            for j in range(1, self.board_size + 1):
-                if padded_board[i][j] == 0:  # Empty cell
-                    # Check if there's any piece in neighboring cells
-                    neighborhood = padded_board[i-1:i+2, j-1:j+2]
-                    if board[i-1][j-1] == 0 and np.any(neighborhood != 0):
-                        valid_moves.append((i-1, j-1))
-        
-        # If no moves near existing pieces, return all empty cells
-        if not valid_moves:
-            return [(i, j) for i in range(self.board_size) 
-                   for j in range(self.board_size) if board[i][j] == 0]
-        return valid_moves
-
     def evaluate_board(self, board: np.ndarray) -> float:
+        """Evaluate the current board state."""
+        if self.is_winner(board, 2):  # AI wins
+            return 10000
+        if self.is_winner(board, 1):  # Human wins
+            return -10000
+        
         score = 0
-        # Check horizontal, vertical and diagonal lines
+        # Evaluate each position
         for i in range(self.board_size):
             for j in range(self.board_size):
-                # Horizontal
-                if j <= self.board_size - 5:
-                    score += self.evaluate_line(board[i, j:j+5])
-                # Vertical
-                if i <= self.board_size - 5:
-                    score += self.evaluate_line(board[i:i+5, j])
-                # Diagonal
-                if i <= self.board_size - 5 and j <= self.board_size - 5:
-                    score += self.evaluate_line(np.diagonal(board[i:i+5, j:j+5]))
-                    score += self.evaluate_line(np.diagonal(np.fliplr(board[i:i+5, j:j+5])))
+                if board[i][j] != 0:
+                    score += self.evaluate_position(board, i, j)
+        
         return score
 
-    def evaluate_line(self, line: np.ndarray) -> float:
-        if len(line) < 5:
-            return 0
+    def evaluate_position(self, board: np.ndarray, row: int, col: int) -> float:
+        """Evaluate a position based on its potential."""
+        player = board[row][col]
+        score = 0
+        
+        for dir_x, dir_y in self.directions:
+            count = 1
+            blocks = 0
+            empty = 0
             
-        ai_count = np.sum(line == 2)
-        human_count = np.sum(line == 1)
-        empty_count = np.sum(line == 0)
+            # Look in both directions
+            for factor in [-1, 1]:
+                r = row + dir_x * factor
+                c = col + dir_y * factor
+                while (0 <= r < self.board_size and 
+                       0 <= c < self.board_size and 
+                       count < 5):
+                    if board[r][c] == player:
+                        count += 1
+                    elif board[r][c] == 0:
+                        empty += 1
+                        break
+                    else:
+                        blocks += 1
+                        break
+                    r += dir_x * factor
+                    c += dir_y * factor
+            
+            # Score based on the number of stones in a row and blocks
+            multiplier = 1 if player == 2 else -1
+            if count >= 4:
+                score += 100 * multiplier
+            elif count == 3 and blocks == 0:
+                score += 50 * multiplier
+            elif count == 2 and blocks == 0:
+                score += 10 * multiplier
+            elif count == 1 and blocks == 0:
+                score += 1 * multiplier
         
-        if human_count == 0 and ai_count > 0:
-            return pow(10, ai_count)
-        if ai_count == 0 and human_count > 0:
-            return -pow(10, human_count)
-        return 0
+        return score
 
-    def check_winner(self, board: np.ndarray, player: int) -> bool:
-        # Check horizontal
+    def get_valid_moves(self, board: np.ndarray) -> List[Tuple[int, int]]:
+        """Get all valid moves, prioritizing moves near existing stones."""
+        moves = []
         for i in range(self.board_size):
-            for j in range(self.board_size - 4):
-                if np.all(board[i, j:j+5] == player):
-                    return True
-        
-        # Check vertical
-        for i in range(self.board_size - 4):
             for j in range(self.board_size):
-                if np.all(board[i:i+5, j] == player):
-                    return True
+                if board[i][j] == 0 and self.has_neighbor(board, i, j):
+                    moves.append((i, j))
         
-        # Check diagonal (top-left to bottom-right)
-        for i in range(self.board_size - 4):
-            for j in range(self.board_size - 4):
-                if np.all(np.diagonal(board[i:i+5, j:j+5]) == player):
+        return moves if moves else [(i, j) for i in range(self.board_size) 
+                                  for j in range(self.board_size) 
+                                  if board[i][j] == 0]
+
+    def has_neighbor(self, board: np.ndarray, row: int, col: int, distance: int = 2) -> bool:
+        """Check if a position has any stones within a certain distance."""
+        for i in range(max(0, row - distance), min(self.board_size, row + distance + 1)):
+            for j in range(max(0, col - distance), min(self.board_size, col + distance + 1)):
+                if board[i][j] != 0:
                     return True
-        
-        # Check diagonal (top-right to bottom-left)
-        for i in range(self.board_size - 4):
-            for j in range(4, self.board_size):
-                if np.all(np.diagonal(np.fliplr(board[i:i+5, j-4:j+1])) == player):
-                    return True
+        return False
+
+    def is_winner(self, board: np.ndarray, player: int) -> bool:
+        """Check if the given player has won."""
+        for i in range(self.board_size):
+            for j in range(self.board_size):
+                if board[i][j] == player:
+                    # Check all directions
+                    for dir_x, dir_y in self.directions:
+                        count = 1
+                        # Look forward
+                        r, c = i + dir_x, j + dir_y
+                        while (0 <= r < self.board_size and 
+                               0 <= c < self.board_size and 
+                               board[r][c] == player):
+                            count += 1
+                            r += dir_x
+                            c += dir_y
+                        
+                        if count >= 5:
+                            return True
         
         return False

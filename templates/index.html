@@ -4,21 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gomoku Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Gomoku</h1>
-        <div class="game-controls">
-            <button id="vs-human">Play with Friend</button>
-            <button id="vs-ai">Play with AI</button>
-            <button id="reset" style="display: none;">Play Again</button>
+        <h1>Gomoku Game</h1>
+        <div class="game-controls" id="initialControls">
+            <button id="vs-human" class="pulse">Play vs Human</button>
+            <button id="vs-ai">Play vs AI</button>
         </div>
-        <div id="status" class="status"></div>
+        <div id="status" class="status">
+            <div class="current-player">
+                <span class="player-label">Current Turn:</span>
+                <span id="playerName"></span>
+            </div>
+        </div>
         <div class="board-container">
-            <div id="board" class="board"></div>
+            <div class="board" id="board"></div>
         </div>
     </div>
+
+    <div class="modal-overlay" id="winnerModal">
+        <div class="modal winner-modal">
+            <div class="confetti"></div>
+            <h2 id="winnerMessage"></h2>
+            <div class="winner-stats">
+                <div class="moves-count">Total Moves: <span id="totalMoves">0</span></div>
+                <div class="game-time">Game Time: <span id="gameTime">0:00</span></div>
+            </div>
+            <button id="playAgain" class="pulse">Play Again</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="playerNamesModal">
+        <div class="modal">
+            <h2>Enter Player Names</h2>
+            <div class="player-input">
+                <label>
+                    <span class="player-color black"></span>
+                    Player 1 (Black)
+                    <input type="text" id="player1Name" placeholder="Enter name" maxlength="15">
+                </label>
+            </div>
+            <div class="player-input">
+                <label>
+                    <span class="player-color white"></span>
+                    Player 2 (White)
+                    <input type="text" id="player2Name" placeholder="Enter name" maxlength="15">
+                </label>
+            </div>
+            <button id="startGameBtn" class="pulse">Start Game</button>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        Developed by <span>Adnan</span>, <span>Muntaha</span>, <span>Nazeeb</span>
+    </footer>
+
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
