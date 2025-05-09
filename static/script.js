@@ -217,7 +217,7 @@ class GomokuGame {
                 }
             } else {
                 // Human vs human: switch player
-                this.currentPlayer = 2;
+                this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
                 this.updateStatus();
             }
         }
