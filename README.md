@@ -33,7 +33,7 @@ A web-based implementation of Gomoku (Five in a Row) with an AI opponent using m
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd Gomoku2
+   cd Gomuku-Ai-Game
    ```
 
 2. Set up a Python virtual environment:
