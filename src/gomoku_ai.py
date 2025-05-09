@@ -23,6 +23,14 @@ class GomokuAI:
         # Get all valid moves
         valid_moves = self.get_valid_moves(board)
         
+        if not valid_moves:  # If no valid moves found, return center or nearby position
+            center = self.board_size // 2
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    if 0 <= center + i < self.board_size and 0 <= center + j < self.board_size:
+                        if board[center + i][center + j] == 0:
+                            return (center + i, center + j)
+        
         # Sort moves by their evaluation to improve alpha-beta pruning
         moves_with_scores = []
         for move in valid_moves:
@@ -47,7 +55,7 @@ class GomokuAI:
             alpha = max(alpha, best_score)
             if alpha >= beta:
                 break
-        
+    
         return best_move if best_move is not None else valid_moves[0]
 
     def minimax(self, board: np.ndarray, depth: int, is_maximizing: bool, alpha: float, beta: float) -> float:

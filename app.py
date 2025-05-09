@@ -13,15 +13,16 @@ def make_move():
     try:
         data = request.get_json()
         board = data.get('board')
-        
+        print("Received board:", board)  # Debug log
+
         if not board:
             return jsonify({'error': 'No board state provided'}), 400
-        
-        # Get AI's move
+
         row, col = ai.get_best_move(board)
+        print("AI move:", row, col)  # Debug log
         return jsonify({'row': row, 'col': col})
-        
     except Exception as e:
+        print("Error in AI move:", e)  # Debug log
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

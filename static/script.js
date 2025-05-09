@@ -151,88 +151,76 @@ class GomokuGame {
         });
     }
 
+    makeMove(row, col, switchPlayer = true) {
+        // Allow move if cell is empty, regardless of gameActive
+        if (this.board[row][col] === 0) {
+            this.moveSound.currentTime = 0;
+            this.moveSound.play();
+            this.board[row][col] = this.currentPlayer;
+            this.moveCount++;
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            const stone = document.createElement('div');
+            stone.className = `stone ${this.currentPlayer === 1 ? 'black' : 'white'}`;
+            cell.appendChild(stone);
+            if (this.checkWinner(row, col)) {
+                this.endGame(this.currentPlayer);
+                return true;
+            }
+            if (switchPlayer) {
+                this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
+                this.updateStatus();
+            }
+            return true;
+        }
+        return false;
+    }
+    
     async handleCellClick(event) {
         if (!this.gameActive) return;
-        
         const row = parseInt(event.target.dataset.row);
         const col = parseInt(event.target.dataset.col);
-        
         if (this.board[row][col] !== 0) return;
-        
-        // Make human move
-        if (this.makeMove(row, col)) {
+        // Human move, don't switch player yet
+        if (this.makeMove(row, col, false)) {
             if (this.checkWinner(row, col)) {
                 this.endGame(this.currentPlayer);
                 return;
             }
-            
             if (this.gameMode === 'ai' && this.gameActive) {
-                // Disable board during AI's turn
                 this.gameActive = false;
                 this.updateStatus('AI is thinking...');
-                
                 try {
-                    // Get AI's move
                     const response = await fetch('/make_move', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ board: this.board })
                     });
-                    
                     if (!response.ok) throw new Error('Failed to get AI move');
-                    
                     const data = await response.json();
-                    const { row: aiRow, col: aiCol } = data;
-                    
-                    // Make AI's move
                     setTimeout(() => {
-                        if (this.makeMove(aiRow, aiCol)) {
+                        const { row: aiRow, col: aiCol } = data;
+                        this.currentPlayer = 2; // Set to AI
+                        if (this.makeMove(aiRow, aiCol, false)) {
                             if (this.checkWinner(aiRow, aiCol)) {
-                                this.endGame(2);
+                                this.endGame(this.currentPlayer);
                                 return;
                             }
                         }
+                        this.currentPlayer = 1; // Back to human
                         this.gameActive = true;
                         this.updateStatus();
-                    }, 500); // Add delay for better UX
-                    
+                    }, 500);
                 } catch (error) {
                     console.error('Error:', error);
                     this.gameActive = true;
                     this.updateStatus('Error occurred during AI move');
                 }
+            } else {
+                // Human vs human: switch player
+                this.currentPlayer = 2;
+                this.updateStatus();
             }
         }
-    }
-
-    makeMove(row, col) {
-        if (this.board[row][col] === 0 && this.gameActive) {
-            this.moveSound.currentTime = 0;
-            this.moveSound.play();
-            
-            this.board[row][col] = this.currentPlayer;
-            this.moveCount++;
-            
-            // Update UI
-            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-            const stone = document.createElement('div');
-            stone.className = `stone ${this.currentPlayer === 1 ? 'black' : 'white'}`;
-            cell.appendChild(stone);
-            
-            // Check for winner before switching players
-            if (this.checkWinner(row, col)) {
-                this.endGame(this.currentPlayer);
-                return true;
-            }
-            
-            // Switch players
-            this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
-            this.updateStatus();
-            return true;
-        }
-        return false;
     }
 
     checkWinner(row, col) {

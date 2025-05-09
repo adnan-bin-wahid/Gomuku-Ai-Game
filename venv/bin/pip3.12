@@ -1,4 +1,4 @@
-#!/home/iit/Desktop/IIT/6th_sem/604_Artificial_Intelligence/Gomoku2/venv/bin/python3
+#!/home/iit/Desktop/IIT/6th_sem/604_Artificial_Intelligence/Gomoku2/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
