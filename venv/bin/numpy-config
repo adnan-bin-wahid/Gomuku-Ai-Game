@@ -1,4 +1,4 @@
-#!/home/iit/Desktop/IIT/6th_sem/604_Artificial_Intelligence/Gomoku2/venv/bin/python
+#!/home/adnan1442/Desktop/6th_Semester/604_Artificial_Intelligence/Gomuku-Ai-Game/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

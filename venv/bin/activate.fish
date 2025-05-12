@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV /home/iit/Desktop/IIT/6th_sem/604_Artificial_Intelligence/Gomoku2/venv
+set -gx VIRTUAL_ENV /home/adnan1442/Desktop/6th_Semester/604_Artificial_Intelligence/Gomuku-Ai-Game/venv
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"bin $PATH

@@ -9,7 +9,7 @@ alias deactivate 'test $?_OLD_VIRTUAL_PATH != 0 && setenv PATH "$_OLD_VIRTUAL_PA
 # Unset irrelevant variables.
 deactivate nondestructive
 
-setenv VIRTUAL_ENV /home/iit/Desktop/IIT/6th_sem/604_Artificial_Intelligence/Gomoku2/venv
+setenv VIRTUAL_ENV /home/adnan1442/Desktop/6th_Semester/604_Artificial_Intelligence/Gomuku-Ai-Game/venv
 
 set _OLD_VIRTUAL_PATH="$PATH"
 setenv PATH "$VIRTUAL_ENV/"bin":$PATH"
