@@ -10,6 +10,7 @@ class GomokuGame {
         this.moveCount = 0;
         this.gameStartTime = null;
         this.gameTimer = null;
+        this.difficulty = 'easy';  // Default difficulty
         
         // Initialize the board UI
         this.initializeBoard();
@@ -17,6 +18,7 @@ class GomokuGame {
         // Get modal elements
         this.winnerModal = document.getElementById('winnerModal');
         this.playerNamesModal = document.getElementById('playerNamesModal');
+        this.difficultyModal = document.getElementById('difficultyModal');
         this.initialControls = document.getElementById('initialControls');
         this.winnerMessage = document.getElementById('winnerMessage');
         
@@ -30,21 +32,25 @@ class GomokuGame {
         this.moveSound = new Audio('/static/sounds/move.mp3');
         this.winSound = new Audio('/static/sounds/win.mp3');
         
-        // Add event listeners
+        // Initialize event listeners
+        this.initializeEventListeners();
+    }
+
+    initializeEventListeners() {
+        // Game control buttons
         document.getElementById('vs-human').addEventListener('click', () => this.showPlayerNamesModal());
-        document.getElementById('vs-ai').addEventListener('click', () => {
-            this.player1Name = 'You';
-            this.player2Name = 'AI';
-            this.startGame('ai');
-        });
+        document.getElementById('vs-ai').addEventListener('click', () => this.showDifficultyModal());
         document.getElementById('playAgain').addEventListener('click', () => this.resetGame());
         document.getElementById('startGameBtn').addEventListener('click', () => this.handleStartGame());
         
-        // Bind event listeners
-        this.setupEventListeners();
-    }
+        // Difficulty buttons
+        const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+        difficultyButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.handleDifficultySelection(btn.id);
+            });
+        });
 
-    setupEventListeners() {
         // Add keyboard support
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
@@ -65,6 +71,18 @@ class GomokuGame {
         this.playerNamesModal.style.display = 'flex';
         document.getElementById('player1Name').value = '';
         document.getElementById('player2Name').value = '';
+    }
+
+    showDifficultyModal() {
+        this.difficultyModal.style.display = 'flex';
+    }
+
+    handleDifficultySelection(difficulty) {
+        this.difficulty = difficulty;
+        this.difficultyModal.style.display = 'none';
+        this.player1Name = 'You';
+        this.player2Name = `AI (${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)})`;
+        this.startGame('ai');
     }
 
     handleStartGame() {
@@ -193,7 +211,10 @@ class GomokuGame {
                     const response = await fetch('/make_move', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ board: this.board })
+                        body: JSON.stringify({ 
+                            board: this.board,
+                            difficulty: this.difficulty
+                        })
                     });
                     if (!response.ok) throw new Error('Failed to get AI move');
                     const data = await response.json();

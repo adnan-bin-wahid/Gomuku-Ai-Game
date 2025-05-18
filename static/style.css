@@ -424,3 +424,43 @@ button:active {
     color: #00b894;
     font-weight: 500;
 }
+
+/* Add new styles for difficulty selection */
+.difficulty-options {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.difficulty-btn {
+    padding: 15px 30px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#easy {
+    background: linear-gradient(45deg, #4CAF50, #81C784);
+}
+
+#medium {
+    background: linear-gradient(45deg, #FFA726, #FFB74D);
+}
+
+#hard {
+    background: linear-gradient(45deg, #ef5350, #E57373);
+}
+
+.difficulty-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+.difficulty-btn:active {
+    transform: translateY(1px);
+}
