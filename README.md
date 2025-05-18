@@ -59,6 +59,25 @@ A web-based implementation of Gomoku (Five in a Row) with an AI opponent using m
    http://localhost:5000
    ```
 
+## Running with Docker
+
+You can run this application easily using Docker (no need to install Python or dependencies):
+
+1. **Build the Docker image:**
+   ```bash
+   docker build -t gomoku-ai .
+   ```
+2. **Run the Docker container:**
+   ```bash
+   docker run -p 5000:5000 gomoku-ai
+   ```
+3. **Open your browser and go to:**
+   ```
+   http://localhost:5000
+   ```
+
+This will start the app in a container and make it available on your local machine.
+
 ## How to Play
 
 1. Choose game mode:
